@@ -4,34 +4,27 @@
 #include <string.h>
 #include <pthread.h>
 
-struct args{
-	unsigned char *buff;
-	int count;
-};
-
-struct args *arg = NULL;
 pthread_mutex_t lock;
 pthread_cond_t cond;
 int num = 0;
 
 void *test1(void *arg){
 	while(1){
-		printf("thread1 start\n");
 		pthread_mutex_lock(&lock);
-		num = num + 2;
-		printf("thread1： %d\n", num);
-		sleep(1);
-		pthread_mutex_unlock(&lock);
 		if(num > 0){
 			pthread_cond_signal(&cond);
+		}else{
+			num = num + 2;
+			printf("thread1： %d\n", num);
 		}
+		pthread_mutex_unlock(&lock);
+		sleep(1);
 	}
 	return 0;
 }
 
 void *test2(void *arg){
 	while(1){
-		printf("thread2 start\n");
 		pthread_mutex_lock(&lock);
 		if(num == 0){
 			printf("thread2 wait\n");
@@ -39,8 +32,8 @@ void *test2(void *arg){
 		}
 		num = num - 1;
 		printf("thread2： %d\n", num);
-		sleep(1);
 		pthread_mutex_unlock(&lock);
+		sleep(1);
 	}
 	return 0;
 }
@@ -52,9 +45,6 @@ int main(int argc, char *argv[])
 	pthread_mutex_init(&lock, NULL);
 	pthread_cond_init(&cond, NULL);
 
-	arg = (struct args*)malloc(sizeof(struct args));
-	arg->buff = "12345678";
-	arg->count = 2;
 	void *thread_ret = NULL;
 	/*
 	 * pthread_create是UNIX环境创建线程函数 
@@ -65,18 +55,18 @@ int main(int argc, char *argv[])
 	 * 最后一个参数是运行函数的参数。
 	 * 若成功则返回0，否则返回出错编号
 	 */
-	ret = pthread_create( &th2, NULL, test2, (void*)arg );
+	ret = pthread_create(&th2, NULL, test2, NULL);
 	if( ret != 0 ){
-		printf( "Create thread2 error!\n");
+		printf("Create thread2 error!\n");
 		return -1;
 	}
 	sleep(1);
-	ret = pthread_create( &th1, NULL, test1, (void*)arg );
+	ret = pthread_create(&th1, NULL, test1, NULL);
 	if( ret != 0 ){
-		printf( "Create thread1 error!\n");
+		printf("Create thread1 error!\n");
 		return -1;
 	}
-	printf( "This is the main process.\n" );
+	printf("This is the main process.\n");
 	/*
 	 * 如果线程5s不结束，我就直接退程序
 	 * sleep(5);
@@ -90,8 +80,8 @@ int main(int argc, char *argv[])
 	 * 如果执行成功，将返回0，如果失败则返回一个错误号。
 	 */
 	pthread_join(th1, &thread_ret);
-	printf( "thread1_ret = %d.\n", thread_ret );
+	printf("thread1_ret = %d.\n", thread_ret);
 	pthread_join(th2, &thread_ret);
-	printf( "thread2_ret = %d.\n", thread_ret );
+	printf("thread2_ret = %d.\n", thread_ret);
 	return 0;
 }
