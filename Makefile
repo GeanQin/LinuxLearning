@@ -15,6 +15,9 @@ dlopen_test:
 	gcc lib_test.c -fPIC -shared -o lib_test.so
 	gcc dlopen_test.c -ldl
 
+fork_test:
+	gcc -g fork_test.c
+
 clean:
 	rm -f a.out
 	rm -rf *test
