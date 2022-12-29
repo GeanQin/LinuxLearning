@@ -18,6 +18,9 @@ dlopen_test:
 fork_test:
 	gcc -g fork_test.c
 
+db_test:
+	gcc -g db_test.c -lmysqlclient
+
 clean:
 	rm -f a.out
 	rm -rf *test
