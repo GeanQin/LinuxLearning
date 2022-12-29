@@ -38,10 +38,35 @@ void *test2(void *arg){
 	return 0;
 }
 
+static int tmp_idx = 0; 
+void *test(void *arg){
+	int idx = *(int *)arg;
+	while(1)
+	{
+		if (tmp_idx != idx)
+		{
+			pthread_mutex_lock(&lock);
+			printf("thread%d wait\n", idx);
+			pthread_cond_wait(&cond, &lock);
+			pthread_mutex_unlock(&lock);
+		}
+		sleep(1);
+		printf("%d complete\n", idx);
+		tmp_idx = 1 - idx;
+
+		pthread_mutex_lock(&lock);
+		pthread_cond_signal(&cond);
+		pthread_mutex_unlock(&lock);
+	}
+
+	return 0;
+}
+
 int main(int argc, char *argv[])
 {
 	int ret = -1;
 	pthread_t th1, th2;
+	pthread_t th[2];
 	pthread_mutex_init(&lock, NULL);
 	pthread_cond_init(&cond, NULL);
 
@@ -55,15 +80,28 @@ int main(int argc, char *argv[])
 	 * 最后一个参数是运行函数的参数。
 	 * 若成功则返回0，否则返回出错编号
 	 */
-	ret = pthread_create(&th2, NULL, test2, NULL);
+	// ret = pthread_create(&th2, NULL, test2, NULL);
+	// if( ret != 0 ){
+	// 	printf("Create thread2 error!\n");
+	// 	return -1;
+	// }
+	// sleep(1);
+	// ret = pthread_create(&th1, NULL, test1, NULL);
+	// if( ret != 0 ){
+	// 	printf("Create thread1 error!\n");
+	// 	return -1;
+	// }
+
+	int idx0 = 0;
+	ret = pthread_create(&th[idx0], NULL, test, &idx0);
 	if( ret != 0 ){
-		printf("Create thread2 error!\n");
+		printf("Create thread%d error!\n", idx0);
 		return -1;
 	}
-	sleep(1);
-	ret = pthread_create(&th1, NULL, test1, NULL);
+	int idx1 = 1;
+	ret = pthread_create(&th[idx1], NULL, test, &idx1);
 	if( ret != 0 ){
-		printf("Create thread1 error!\n");
+		printf("Create thread%d error!\n", idx1);
 		return -1;
 	}
 	printf("This is the main process.\n");
@@ -79,9 +117,13 @@ int main(int argc, char *argv[])
 	 * 第二个参数为一个用户定义的指针。它可以用来存储被等待线程的返回值。
 	 * 如果执行成功，将返回0，如果失败则返回一个错误号。
 	 */
-	pthread_join(th1, &thread_ret);
-	printf("thread1_ret = %d.\n", thread_ret);
-	pthread_join(th2, &thread_ret);
-	printf("thread2_ret = %d.\n", thread_ret);
+	// pthread_join(th1, &thread_ret);
+	// printf("thread1_ret = %d.\n", thread_ret);
+	// pthread_join(th2, &thread_ret);
+	// printf("thread2_ret = %d.\n", thread_ret);
+	pthread_join(th[0], &thread_ret);
+	printf("thread_ret = %d.\n", thread_ret);
+	pthread_join(th[1], &thread_ret);
+	printf("thread_ret = %d.\n", thread_ret);
 	return 0;
 }
