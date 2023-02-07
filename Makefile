@@ -19,7 +19,7 @@ fork_test:
 	gcc -g fork_test.c
 
 db_test:
-	gcc -g db_test.c -lmysqlclient
+	gcc -g db_test.c -lmysqlclient -lcjson
 
 clean:
 	rm -f a.out

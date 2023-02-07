@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <mysql/mysql.h>
+#include <cjson/cJSON.h>
 
-int main()
+static MYSQL mysql;
+
+int m_mysql_init()
 {
-    MYSQL mysql;
     mysql_init(&mysql);
     printf("vresion = %s\n", mysql_get_client_info());
 
@@ -14,53 +17,84 @@ int main()
         return -1;
     }
     printf("connect success\n");
-
-    char *data = "insert into client_pid(did, pid) values('1234567890ab', 5555)";
-    printf("data = %s\n", data);
     mysql_set_character_set(&mysql, "utf8");
 
-    int flag = mysql_real_query(&mysql, data, (unsigned int)strlen(data)); // 插入
-    if (!flag)
+    return 0;
+}
+
+int m_mysql_cmd(char *cmd, char *ret_json, int ret_size)
+{
+    int ret = 0;
+    MYSQL_RES *result;
+
+    ret = mysql_real_query(&mysql, cmd, (unsigned int)strlen(cmd));
+    if (!ret)
     {
-        printf("insert success\n");
+        printf("cmd success\n");
     }
     else
     {
-        printf("insert failed\n");
+        printf("cmd failed\n");
     }
 
-    data = "select * from client_pid where did='1234567890ab'";
-    printf("data = %s\n", data);
-
-    flag = mysql_real_query(&mysql, data, (unsigned int)strlen(data)); // 插入
-    if (!flag)
+    result = mysql_store_result(&mysql);
+    if (result == NULL)
     {
-        printf("select success\n");
+        printf("result null\n");
     }
-    else
-    {
-        printf("select failed\n");
-    }
+    else{
+        int num_fields = mysql_num_fields(result);
+        MYSQL_ROW row;
+        cJSON* cjson_test = cJSON_CreateObject();
+        cJSON* cjson_all = cJSON_CreateArray();
 
-    MYSQL_RES *result = mysql_store_result(&mysql);
-    int num_fields = mysql_num_fields(result);
-
-    MYSQL_ROW row;
-
-    int i = 0;
-    while ((row = mysql_fetch_row(result)))
-    {
-        for (i = 0; i < num_fields; i++)
+        int i = 0;
+        while ((row = mysql_fetch_row(result)))
         {
-            printf("%s ", row[i] ? row[i] : "NULL");
+            cJSON* cjson_array = cJSON_CreateArray();
+            for (i = 0; i < num_fields; i++)
+            {
+                // printf("%s ", row[i] ? row[i] : "NULL");
+                if (row[i])
+                {
+                    cJSON_AddItemToArray(cjson_array, cJSON_CreateString(row[i]));
+                }
+                else
+                {
+                    cJSON_AddItemToArray(cjson_array, cJSON_CreateString("NULL"));
+                }
+            }
+
+            cJSON_AddItemToArray(cjson_all, cjson_array);
+            // printf("\n");
         }
+        cJSON_AddItemToObject(cjson_test, "get", cjson_all);
+        printf("%s\n", cJSON_Print(cjson_test));
 
-        printf("\n");
+        cJSON_Delete(cjson_test);
+        mysql_free_result(result);
     }
+}
 
-    mysql_free_result(result);
-
+void m_mysql_deinit()
+{
     mysql_close(&mysql); // 关闭数据库
+}
+
+int main()
+{
+    m_mysql_init();
+
+    char *data = "insert into client_pid(did, pid) values('3456789abcde', 5561)";
+    // printf("data = %s\n", data);
+
+    // m_mysql_cmd(data, NULL, 0);
+
+    data = "select * from client_pid";
+    printf("data = %s\n", data);
+    m_mysql_cmd(data, NULL, 0);
+
+    m_mysql_deinit();
 
     return 0;
 }

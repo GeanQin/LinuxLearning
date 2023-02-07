@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+SIGUSR1
+
 int main(int argc, char *argv[])
 {
 	pid_t fpid;
@@ -15,6 +17,29 @@ int main(int argc, char *argv[])
 	 * ret: 若成功调用一次则返回两个值，子进程返回0，父进程返回子进程ID；否则，出错返回-1
 	 */
 
+	fpid = fork();
+	if (fpid < 0)
+	{
+		printf("error in fork!");
+	}
+	else if (fpid == 0)
+	{
+		printf("i am the child process, my process id is %d\n", getpid());
+		while (1)
+		{
+			sleep(1);
+		}
+	}
+	else
+	{
+		printf("i am the parent process, my process id is %d\n", getpid());
+		while (1)
+		{
+			sleep(1);
+		}
+	}
+
+#if 0	// 测试子进程退出，父进程没回收导致的僵尸进程
 	while (1)
 	{
 		fpid = fork();
@@ -38,6 +63,7 @@ int main(int argc, char *argv[])
 		}
 		printf("count: %d\n", count);
 	}
+#endif
 
 	return 0;
 }
