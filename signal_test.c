@@ -1,19 +1,17 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/types.h>
 
 void sigcb(int signo)
 {
     switch (signo)
     {
-    case SIGHUP:
-        printf("Get a signal -- SIGHUP\n");
+    case SIGUSR1:
+        printf("[%d]Get a signal -- SIGUSR1\n", getpid());
         break;
-    case SIGINT:
-        printf("Get a signal -- SIGINT\n");
-        break;
-    case SIGQUIT:
-        printf("Get a signal -- SIGQUIT\n");
+    case SIGUSR2:
+        printf("[%d]Get a signal -- SIGUSR2\n", getpid());
         break;
     }
     return;
@@ -21,12 +19,32 @@ void sigcb(int signo)
 
 int main()
 {
-    signal(SIGHUP, sigcb);
-    signal(SIGINT, sigcb);
-    signal(SIGQUIT, sigcb);
-    for (;;)
+    pid_t fpid;
+
+    fpid = fork();
+    if (fpid < 0)
     {
-        printf("my id=%d\n", getpid());
-        sleep(5);
+        printf("error in fork!");
+    }
+    else if (fpid == 0)
+    {
+        signal(SIGUSR1, sigcb);
+        signal(SIGUSR2, sigcb);
+        while (1)
+        {
+            printf("i am the child process, my process id is %d, father id is %d\n", getpid(), getppid());
+            sleep(1);
+        }
+    }
+    else
+    {
+        while (1)
+        {
+            printf("i am the parent process, my process id is %d, son id is %d\n", getpid(), fpid);
+            sleep(2);
+            kill(fpid, SIGUSR1);
+            sleep(3);
+            kill(fpid, SIGUSR2);
+        }
     }
 }
