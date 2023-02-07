@@ -21,6 +21,9 @@ fork_test:
 db_test:
 	gcc -g db_test.c -lmysqlclient -lcjson
 
+signal_test:
+	gcc -g signal_test.c
+
 clean:
 	rm -f a.out
 	rm -rf *test
