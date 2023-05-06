@@ -18,8 +18,13 @@ dlopen_test:
 fork_test:
 	gcc -g fork_test.c
 
+# yum install mariadb-server
+# yum install mariadb-devel
+# git clone git@github.com:DaveGamble/cJSON.git
+# yum install python3-devel
+# pip3 install mysqlclient
 db_test:
-	gcc -g db_test.c -lmysqlclient -lcjson
+	gcc -g db_test.c -lmysqlclient -lcjson -L/usr/lib64/mysql/
 
 signal_test:
 	gcc -g signal_test.c
