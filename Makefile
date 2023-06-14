@@ -29,6 +29,9 @@ db_test:
 signal_test:
 	gcc -g signal_test.c
 
+ffmpeg_test:
+	gcc ffmpeg_test.c -lavformat -lavcodec -lavutil -lpthread -lm -lz -L/root/tool/ffmpeg-4.2.9/install/lib -I/root/tool/ffmpeg-4.2.9/install/include
+
 clean:
 	rm -f a.out
 	rm -rf *test
